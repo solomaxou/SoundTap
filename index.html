@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>SoundTap</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="control-panel">
+        <h1>SoundTap 🔊</h1>
+        
+        <div class="setting" id="score-container" 
+             title="🏆 PROGRESSION SOUNDTAP :&#10;• Niveau 10 : Pack Danger&#10;• Niveau 25 : Pack Internet + TAILLE X2&#10;• Niveau 40 : Pack Apocalypse + TAILLE X3">
+            <label>Score (chrono) 🏆 :</label>
+            <input type="text" id="score-display" value="0" readonly>
+        </div>
+
+        <div class="setting">
+            <label>Intervalle (sec) : </label>
+            <input type="number" id="sound-interval" value="12" min="1" max="99">
+        </div>
+
+        <div id="status-container" class="setting" style="display: none;">
+            <label id="status-label">Statut</label>
+            <input type="text" id="status-display" value="0s" readonly>
+        </div>
+
+        <div class="menu-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button id="start-btn" class="btn-primary" style="flex: 1;">START</button>
+                <button id="panic-btn" class="btn-danger" style="flex: 1;">STOP</button>
+            </div>
+            
+            <div class="setting">
+    <label>Mode Discret (Camouflage) 🤫 :</label>
+    <select id="fake-screen-select" class="challenge-btn" style="width: 100%; border-color: #4db6ac; color: #4db6ac; background: #2c2f3f; cursor: pointer;">
+        <option value="">-- Désactivé --</option>
+        <option value="mon-bureau.jpg">Recherche Google (Travail)</option>
+        <option value="mon-bureau1.jpg">YouTube (Divertissement)</option>
+        <option value="mon-bureau2.jpg">Recherche Google SVT (Travail)</option>
+        <option value="mon-bureau3.jpg">Recherche Google ENT (Travail)</option>
+        <option value="https://i.ytimg.com/vi/lgsQkL4B_4w/maxresdefault.jpg">Brainrot (Lol)</option>
+    </select>
+</div>
+        </div>
+
+        <hr style="opacity: 0.2; margin: 20px 0;">
+
+        <h3>Défis Chrono 🔥</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="challenge-30" class="challenge-btn">Survie 30s (+1 Score)</button>
+            <button id="challenge-60" class="challenge-btn">Hardcore 1min (+3 Scores)</button>
+        </div>
+    </div> <div id="fake-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:10000; background-size:cover; background-position:center; background-repeat:no-repeat;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
