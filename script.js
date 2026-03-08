@@ -11,7 +11,6 @@ let allEmojis = [];
 let derniersSonsJoues = []; 
 
 const sonsChaosOriginal = [
-    // --- TES 350 SONS (GARDÉS À L'IDENTIQUE) ---
     "talmo-sound", "talmo-v2", "bebou-talmo", "poupette-kenza-rire", "nasdas-chien", "nasdas-la-degaine",
     "michou-rire", "inoxtag-houlala", "greg-guillotin-pire-stagiaire", "mister-v-police", "mister-v-pique",
     "maskey-type-beat", "squeezie-non", "joueur-du-grenier-colere", "jdg-putain", "amixem-rire",
@@ -91,7 +90,7 @@ const sonsChaosOriginal = [
 
 let sonsDisponibles = [];
 let chaosActive = false;
-let isChallengeActive = false; // --- NOUVEAU : SÉCURITÉ SCORE ---
+let isChallengeActive = false; 
 let prochainSonTimeout = null;
 let audioActuel = null;
 let chronoGlobal = null; 
@@ -104,21 +103,11 @@ scoreDisplay.value = scoreActuel;
 function verifierDeblocages() {
     let nouvelleListe = [...emojisBase];
     let nouvelleTaille = "2rem";
-
     if (scoreActuel >= 10) nouvelleListe = [...nouvelleListe, ...packDanger];
-    if (scoreActuel >= 25) {
-        nouvelleListe = [...nouvelleListe, ...packInternet];
-        nouvelleTaille = "4rem";
-    }
-    if (scoreActuel >= 40) {
-        nouvelleListe = [...nouvelleListe, ...packApocalypse];
-        nouvelleTaille = "6rem";
-    }
-    
+    if (scoreActuel >= 25) { nouvelleListe = [...nouvelleListe, ...packInternet]; nouvelleTaille = "4rem"; }
+    if (scoreActuel >= 40) { nouvelleListe = [...nouvelleListe, ...packApocalypse]; nouvelleTaille = "6rem"; }
     emojisActuels = nouvelleListe;
-    allEmojis.forEach(emojiObj => { 
-        emojiObj.el.style.fontSize = nouvelleTaille; 
-    });
+    allEmojis.forEach(emojiObj => { emojiObj.el.style.fontSize = nouvelleTaille; });
     actualiserEmojisEcran();
 }
 
@@ -129,7 +118,6 @@ function actualiserEmojisEcran() {
     });
 }
 
-// --- MOTEUR EMOJIS (PHYSIQUE RÉPARÉE) ---
 function createEmoji() {
     const el = document.createElement('div');
     el.className = 'emoji';
@@ -137,72 +125,44 @@ function createEmoji() {
     let tSize = (scoreActuel >= 40) ? "6rem" : (scoreActuel >= 25) ? "4rem" : "2rem";
     el.style.fontSize = tSize;
     document.body.appendChild(el);
-    
     let angle = Math.random() * Math.PI * 2;
-    return { 
-        el: el, 
-        x: 100 + Math.random() * (window.innerWidth - 200), 
-        y: 100 + Math.random() * (window.innerHeight - 200), 
-        vx: Math.cos(angle) * speed, 
-        vy: Math.sin(angle) * speed 
-    };
+    return { el, x: 100 + Math.random() * (window.innerWidth - 200), y: 100 + Math.random() * (window.innerHeight - 200), vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
 }
 
 function update() {
     allEmojis.forEach((emoji, i) => {
-        emoji.x += emoji.vx;
-        emoji.y += emoji.vy;
-
+        emoji.x += emoji.vx; emoji.y += emoji.vy;
         let diametre = (scoreActuel >= 40) ? 90 : (scoreActuel >= 25) ? 60 : 40;
-
         if (emoji.x <= 0) { emoji.vx = Math.abs(emoji.vx); emoji.x = 0; }
         if (emoji.x >= window.innerWidth - diametre) { emoji.vx = -Math.abs(emoji.vx); emoji.x = window.innerWidth - diametre; }
         if (emoji.y <= 0) { emoji.vy = Math.abs(emoji.vy); emoji.y = 0; }
         if (emoji.y >= window.innerHeight - diametre) { emoji.vy = -Math.abs(emoji.vy); emoji.y = window.innerHeight - diametre; }
-        
         for (let j = i + 1; j < allEmojis.length; j++) {
             let other = allEmojis[j];
-            let dx = other.x - emoji.x;
-            let dy = other.y - emoji.y;
+            let dx = other.x - emoji.x; let dy = other.y - emoji.y;
             let distance = Math.sqrt(dx * dx + dy * dy);
             let minDist = diametre;
-
-            if (distance < minDist) { 
-                let overlap = minDist - distance;
-                let nx = dx / distance;
-                let ny = dy / distance;
-                emoji.x -= nx * (overlap / 2);
-                emoji.y -= ny * (overlap / 2);
-                other.x += nx * (overlap / 2);
-                other.y += ny * (overlap / 2);
-
+            if (distance < minDist) {
+                let overlap = minDist - distance; let nx = dx / distance; let ny = dy / distance;
+                emoji.x -= nx * (overlap / 2); emoji.y -= ny * (overlap / 2);
+                other.x += nx * (overlap / 2); other.y += ny * (overlap / 2);
                 let tempVx = emoji.vx; let tempVy = emoji.vy;
                 emoji.vx = other.vx; emoji.vy = other.vy;
                 other.vx = tempVx; other.vy = tempVy;
             }
         }
-        emoji.el.style.left = emoji.x + 'px';
-        emoji.el.style.top = emoji.y + 'px';
+        emoji.el.style.left = emoji.x + 'px'; emoji.el.style.top = emoji.y + 'px';
     });
     requestAnimationFrame(update);
 }
 
-function startChaos() {
-    allEmojis = []; 
-    for (let i = 0; i < count; i++) { allEmojis.push(createEmoji()); }
-    update();
-}
-
-startChaos();
-verifierDeblocages();
+function startChaos() { allEmojis = []; for (let i = 0; i < count; i++) { allEmojis.push(createEmoji()); } update(); }
+startChaos(); verifierDeblocages();
 
 // --- LOGIQUE SONORE ---
 function melangerSons(liste) {
     let copie = [...liste];
-    for (let i = copie.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copie[i], copie[j]] = [copie[j], copie[i]];
-    }
+    for (let i = copie.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copie[i], copie[j]] = [copie[j], copie[i]]; }
     return copie;
 }
 sonsDisponibles = melangerSons(sonsChaosOriginal);
@@ -210,6 +170,9 @@ sonsDisponibles = melangerSons(sonsChaosOriginal);
 const intervalInput = document.getElementById('sound-interval');
 const startBtn = document.getElementById('start-btn');
 const stopBtn = document.getElementById('panic-btn');
+const challenge30 = document.getElementById('challenge-30');
+const challenge60 = document.getElementById('challenge-60');
+const fakeSelect = document.getElementById('fake-screen-select');
 const statusContainer = document.getElementById('status-container');
 const statusLabel = document.getElementById('status-label');
 const statusDisplay = document.getElementById('status-display');
@@ -217,25 +180,13 @@ const statusDisplay = document.getElementById('status-display');
 function jouerProchainSon() {
     if (!chaosActive) return;
     if (sonsDisponibles.length === 0) sonsDisponibles = melangerSons(sonsChaosOriginal);
-
-    let nomDuSon;
-    let indexChoisi;
-    let tentatives = 0;
-    
-    do {
-        indexChoisi = Math.floor(Math.random() * sonsDisponibles.length);
-        nomDuSon = sonsDisponibles[indexChoisi];
-        tentatives++;
-    } while (derniersSonsJoues.includes(nomDuSon) && tentatives < 100);
-
-    sonsDisponibles.splice(indexChoisi, 1);
-    derniersSonsJoues.push(nomDuSon);
-    if (derniersSonsJoues.length > 15) derniersSonsJoues.shift(); 
-
+    let nomDuSon; let indexChoisi; let tentatives = 0;
+    do { indexChoisi = Math.floor(Math.random() * sonsDisponibles.length); nomDuSon = sonsDisponibles[indexChoisi]; tentatives++; } while (derniersSonsJoues.includes(nomDuSon) && tentatives < 100);
+    sonsDisponibles.splice(indexChoisi, 1); derniersSonsJoues.push(nomDuSon);
+    if (derniersSonsJoues.length > 15) derniersSonsJoues.shift();
     const urlChoisie = `https://www.myinstants.com/media/sounds/${nomDuSon}.mp3`;
     audioActuel = new Audio(urlChoisie);
     audioActuel.onloadedmetadata = () => demarrerCompteurVisuel(audioActuel.duration, "Son en cours :", true);
-    
     audioActuel.play().then(() => {
         audioActuel.onended = () => {
             if (!chaosActive) return;
@@ -252,28 +203,46 @@ function demarrerCompteurVisuel(secondes, texte, estSon) {
     statusLabel.innerText = texte;
     statusDisplay.value = tempsRestant + "s";
     statusDisplay.className = estSon ? "status-playing" : "status-waiting";
-    chronoGlobal = setInterval(() => {
-        tempsRestant--;
-        if (tempsRestant >= 0) statusDisplay.value = tempsRestant + "s";
-        else clearInterval(chronoGlobal);
-    }, 1000);
+    chronoGlobal = setInterval(() => { tempsRestant--; if (tempsRestant >= 0) statusDisplay.value = tempsRestant + "s"; else clearInterval(chronoGlobal); }, 1000);
+}
+
+// Bloquer les boutons
+function setControlesDisabled(state) {
+    intervalInput.disabled = state;
+    startBtn.disabled = state;
+    challenge30.disabled = state;
+    challenge60.disabled = state;
+    fakeSelect.disabled = state;
+    // Si state est vrai, on bloque aussi le STOP (pendant un défi)
+    if (isChallengeActive) {
+        stopBtn.disabled = true;
+        stopBtn.style.opacity = "0.5";
+        stopBtn.style.cursor = "not-allowed";
+    } else {
+        stopBtn.disabled = false;
+        stopBtn.style.opacity = "1";
+        stopBtn.style.cursor = "pointer";
+    }
 }
 
 startBtn.addEventListener('click', () => {
     if (chaosActive) return;
     chaosActive = true;
-    intervalInput.disabled = true; // --- BLOQUÉ ---
+    setControlesDisabled(true);
     startBtn.innerText = "🔥 ACTIVÉ !";
     statusContainer.style.display = "flex";
     jouerProchainSon();
 });
 
-stopBtn.addEventListener('click', () => reinitialiserTout());
+stopBtn.addEventListener('click', () => {
+    if (isChallengeActive) return; // Impossible de cliquer si défi en cours
+    reinitialiserTout();
+});
 
 function reinitialiserTout() {
     chaosActive = false;
-    isChallengeActive = false; // --- SÉCURITÉ ---
-    intervalInput.disabled = false; // --- DÉBLOQUÉ ---
+    isChallengeActive = false;
+    setControlesDisabled(false);
     if (prochainSonTimeout) clearTimeout(prochainSonTimeout);
     if (chronoGlobal) clearInterval(chronoGlobal);
     if (audioActuel) { audioActuel.pause(); audioActuel.currentTime = 0; }
@@ -284,44 +253,33 @@ function reinitialiserTout() {
 function lancerDefi(duree) {
     if (chaosActive) return;
     chaosActive = true;
-    isChallengeActive = true; // --- SEUL MOMENT OÙ ON PEUT GAGNER ---
+    isChallengeActive = true; 
     intervalInput.value = 1;
-    intervalInput.disabled = true; // --- BLOQUÉ ---
-    startBtn.innerText = "🔥 DÉFI !";
+    setControlesDisabled(true); // Bloque TOUT y compris STOP
+    startBtn.innerText = "🔥 QUÊTE...";
     statusContainer.style.display = "flex";
     jouerProchainSon();
+    
     setTimeout(() => {
-        if(isChallengeActive) { // Vérifie qu'on n'a pas fait STOP entre temps
-            scoreActuel += (duree === 60 ? 3 : 1);
-            scoreDisplay.value = scoreActuel;
-            localStorage.setItem('chaosScore', scoreActuel);
-            verifierDeblocages();
-            reinitialiserTout();
-            alert("Défi réussi ! 🏆");
-        }
+        // Le score n'est ajouté que si la page n'a pas été fermée/rechargée
+        scoreActuel += (duree === 60 ? 3 : 1);
+        scoreDisplay.value = scoreActuel;
+        localStorage.setItem('chaosScore', scoreActuel);
+        verifierDeblocages();
+        isChallengeActive = false; // Fin de la quête
+        reinitialiserTout();
+        alert("Quête terminée ! Tu as gagné tes points. 🏆");
     }, duree * 1000);
 }
 
-document.getElementById('challenge-30').addEventListener('click', () => lancerDefi(30));
-document.getElementById('challenge-60').addEventListener('click', () => lancerDefi(60));
+challenge30.addEventListener('click', () => lancerDefi(30));
+challenge60.addEventListener('click', () => lancerDefi(60));
 
 // --- SYSTÈME MODE DISCRET ---
-const fakeSelect = document.getElementById('fake-screen-select');
 const fakeOverlay = document.getElementById('fake-overlay');
-
 fakeSelect.addEventListener('change', (e) => {
     const imageUrl = e.target.value;
-    if (imageUrl) {
-        fakeOverlay.style.backgroundImage = `url('${imageUrl}')`;
-        fakeOverlay.style.display = "block";
-    } else {
-        fakeOverlay.style.display = "none";
-    }
+    if (imageUrl) { fakeOverlay.style.backgroundImage = `url('${imageUrl}')`; fakeOverlay.style.display = "block"; }
+    else { fakeOverlay.style.display = "none"; }
 });
-
-window.addEventListener('keydown', (e) => {
-    if (e.key === "Escape") {
-        fakeOverlay.style.display = "none";
-        fakeSelect.value = ""; 
-    }
-});
+window.addEventListener('keydown', (e) => { if (e.key === "Escape") { fakeOverlay.style.display = "none"; fakeSelect.value = ""; } });
