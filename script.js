@@ -8,9 +8,9 @@ let emojisActuels = [...emojisBase];
 const count = 20; 
 const speed = 4;  
 let allEmojis = [];
-let derniersSonsJoues = []; 
 
 const sonsChaosOriginal = [
+    // --- TES SONS EXISTANTS ---
     "talmo-sound", "talmo-v2", "bebou-talmo", "poupette-kenza-rire", "nasdas-chien", "nasdas-la-degaine",
     "michou-rire", "inoxtag-houlala", "greg-guillotin-pire-stagiaire", "mister-v-police", "mister-v-pique",
     "maskey-type-beat", "squeezie-non", "joueur-du-grenier-colere", "jdg-putain", "amixem-rire",
@@ -85,10 +85,22 @@ const sonsChaosOriginal = [
     "fort-boyard-generique", "intervilles-generique", "questions-pour-un-champion-generique",
     "le-juste-prix-generique", "une-famille-en-or-generique", "motus-boule-noire",
     "nagui-n-oubliez-pas-les-paroles", "cyril-hanouna-mes-petites-beautes", "tpmp-generique",
-    "quotidien-yann-barthes", "tf1-jt-generique", "france-2-jt-generique", "m6-jt-generique"
+    "quotidien-yann-barthes", "tf1-jt-generique", "france-2-jt-generique", "m6-jt-generique",
+    // --- NOUVEAUX SONS (CHAOS++) ---
+    "sigma-phonk", "gigachad-theme", "skibidi-sigma", "goofy-yell", "cartoon-running", 
+    "wilhelm-scream", "error-sound", "windows-error", "heavy-breathing", "slap-sound",
+    "minecraft-eat", "roblox-drink", "popeye-strong", "mario-jump", "sonic-ring-loss",
+    "subway-surfers-hoverboard", "temple-run-death", "angry-birds-pig", "clash-royale-king-laugh",
+    "he-he-he-haw-v2", "emotional-damage", "why-you-bully-me", "no-god-please-no",
+    "fbi-open-up-v2", "deez-nuts", "got-em", "finish-him-mortal-kombat", "fatality",
+    "here-we-go-again", "san-andreas-busted", "wasted-v2", "inception-button",
+    "tuturu", "ara-ara", "nani-sound", "sus-sound-among-us", "vent-closing",
+    "samsung-horizon", "iphone-radar-earrape", "nokia-arabic", "super-idol",
+    "bing-chilling", "social-credit-increase", "social-credit-decrease", "the-rock-eyebrow"
 ];
 
-let sonsDisponibles = [];
+let sonsMelanges = [];
+let indexSonActuel = 0;
 let chaosActive = false;
 let isChallengeActive = false; 
 let prochainSonTimeout = null;
@@ -118,6 +130,7 @@ function actualiserEmojisEcran() {
     });
 }
 
+// --- MOTEUR EMOJIS ---
 function createEmoji() {
     const el = document.createElement('div');
     el.className = 'emoji';
@@ -159,13 +172,17 @@ function update() {
 function startChaos() { allEmojis = []; for (let i = 0; i < count; i++) { allEmojis.push(createEmoji()); } update(); }
 startChaos(); verifierDeblocages();
 
-// --- LOGIQUE SONORE ---
-function melangerSons(liste) {
-    let copie = [...liste];
-    for (let i = copie.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copie[i], copie[j]] = [copie[j], copie[i]]; }
-    return copie;
+// --- LOGIQUE SONORE (ULTRA-ALÉATOIRE) ---
+function melangerSons() {
+    sonsMelanges = [...sonsChaosOriginal];
+    for (let i = sonsMelanges.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sonsMelanges[i], sonsMelanges[j]] = [sonsMelanges[j], sonsMelanges[i]];
+    }
+    indexSonActuel = 0;
 }
-sonsDisponibles = melangerSons(sonsChaosOriginal);
+
+melangerSons(); // Premier mélange
 
 const intervalInput = document.getElementById('sound-interval');
 const startBtn = document.getElementById('start-btn');
@@ -179,14 +196,20 @@ const statusDisplay = document.getElementById('status-display');
 
 function jouerProchainSon() {
     if (!chaosActive) return;
-    if (sonsDisponibles.length === 0) sonsDisponibles = melangerSons(sonsChaosOriginal);
-    let nomDuSon; let indexChoisi; let tentatives = 0;
-    do { indexChoisi = Math.floor(Math.random() * sonsDisponibles.length); nomDuSon = sonsDisponibles[indexChoisi]; tentatives++; } while (derniersSonsJoues.includes(nomDuSon) && tentatives < 100);
-    sonsDisponibles.splice(indexChoisi, 1); derniersSonsJoues.push(nomDuSon);
-    if (derniersSonsJoues.length > 15) derniersSonsJoues.shift();
+    
+    // Si on a fini la liste, on remélange tout pour ne jamais avoir le même ordre
+    if (indexSonActuel >= sonsMelanges.length) {
+        melangerSons();
+    }
+
+    let nomDuSon = sonsMelanges[indexSonActuel];
+    indexSonActuel++;
+
     const urlChoisie = `https://www.myinstants.com/media/sounds/${nomDuSon}.mp3`;
     audioActuel = new Audio(urlChoisie);
+    
     audioActuel.onloadedmetadata = () => demarrerCompteurVisuel(audioActuel.duration, "Son en cours :", true);
+    
     audioActuel.play().then(() => {
         audioActuel.onended = () => {
             if (!chaosActive) return;
@@ -206,14 +229,12 @@ function demarrerCompteurVisuel(secondes, texte, estSon) {
     chronoGlobal = setInterval(() => { tempsRestant--; if (tempsRestant >= 0) statusDisplay.value = tempsRestant + "s"; else clearInterval(chronoGlobal); }, 1000);
 }
 
-// Bloquer les boutons
 function setControlesDisabled(state) {
     intervalInput.disabled = state;
     startBtn.disabled = state;
     challenge30.disabled = state;
     challenge60.disabled = state;
-    fakeSelect.disabled = state;
-    // Si state est vrai, on bloque aussi le STOP (pendant un défi)
+    // fakeSelect reste TOUJOURS activé
     if (isChallengeActive) {
         stopBtn.disabled = true;
         stopBtn.style.opacity = "0.5";
@@ -235,7 +256,7 @@ startBtn.addEventListener('click', () => {
 });
 
 stopBtn.addEventListener('click', () => {
-    if (isChallengeActive) return; // Impossible de cliquer si défi en cours
+    if (isChallengeActive) return; 
     reinitialiserTout();
 });
 
@@ -255,31 +276,34 @@ function lancerDefi(duree) {
     chaosActive = true;
     isChallengeActive = true; 
     intervalInput.value = 1;
-    setControlesDisabled(true); // Bloque TOUT y compris STOP
+    setControlesDisabled(true); 
     startBtn.innerText = "🔥 QUÊTE...";
     statusContainer.style.display = "flex";
     jouerProchainSon();
     
     setTimeout(() => {
-        // Le score n'est ajouté que si la page n'a pas été fermée/rechargée
         scoreActuel += (duree === 60 ? 3 : 1);
         scoreDisplay.value = scoreActuel;
         localStorage.setItem('chaosScore', scoreActuel);
         verifierDeblocages();
-        isChallengeActive = false; // Fin de la quête
+        isChallengeActive = false;
         reinitialiserTout();
-        alert("Quête terminée ! Tu as gagné tes points. 🏆");
+        alert("Quête terminée ! 🏆");
     }, duree * 1000);
 }
 
 challenge30.addEventListener('click', () => lancerDefi(30));
 challenge60.addEventListener('click', () => lancerDefi(60));
 
-// --- SYSTÈME MODE DISCRET ---
+// --- SYSTÈME MODE DISCRET (TOUJOURS DISPONIBLE) ---
 const fakeOverlay = document.getElementById('fake-overlay');
 fakeSelect.addEventListener('change', (e) => {
     const imageUrl = e.target.value;
-    if (imageUrl) { fakeOverlay.style.backgroundImage = `url('${imageUrl}')`; fakeOverlay.style.display = "block"; }
-    else { fakeOverlay.style.display = "none"; }
+    if (imageUrl) { 
+        fakeOverlay.style.backgroundImage = `url('${imageUrl}')`; 
+        fakeOverlay.style.display = "block"; 
+    } else { 
+        fakeOverlay.style.display = "none"; 
+    }
 });
 window.addEventListener('keydown', (e) => { if (e.key === "Escape") { fakeOverlay.style.display = "none"; fakeSelect.value = ""; } });
