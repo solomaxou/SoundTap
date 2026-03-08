@@ -38,39 +38,34 @@ h1 {
 }
 
 .setting {
-    margin: 20px 0;
+    margin: 15px 0;
     background: rgba(0,0,0,0.2);
     padding: 12px 15px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px; /* Espace entre le label et l'input/select */
 }
 
-/* Style spécifique pour la case score pour indiquer l'infobulle */
-#score-container {
-    cursor: help;
-}
-
-    #score-container label {
-        text-align: left;
-        line-height: 1.2;
-    }
-
-input[type=number], #status-display, #score-display {
+/* --- CHAMPS DE TEXTE ET SCORES --- */
+input[type=number], #status-display, #score-display, #fake-screen-select {
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid #4ecca3;
     border-radius: 8px;
     color: #4ecca3;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 20px;
     font-weight: bold;
     padding: 10px;
-    width: 90px;
-    text-align: center;
     outline: none;
     transition: 0.3s ease;
     box-shadow: 0 0 5px rgba(78, 204, 163, 0.2);
+}
+
+input[type=number], #status-display, #score-display {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    width: 90px;
+    text-align: center;
 }
 
 #score-display {
@@ -79,7 +74,29 @@ input[type=number], #status-display, #score-display {
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
-input[type=number]:focus {
+/* --- STYLE SPÉCIFIQUE DU MENU CAMOUFLAGE --- */
+#fake-screen-select {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 1; /* Prend la place restante dans la ligne .setting */
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+}
+
+#fake-screen-select:hover:not(:disabled) {
+    box-shadow: 0 0 15px rgba(78, 204, 163, 0.5);
+    transform: scale(1.02);
+}
+
+/* Style des options dans le menu déroulant */
+#fake-screen-select option {
+    background: #1a1a2e;
+    color: white;
+}
+
+/* --- ÉTATS ANIMÉS --- */
+input[type=number]:focus, #fake-screen-select:focus {
     box-shadow: 0 0 20px #4ecca3, inset 0 0 10px rgba(78, 204, 163, 0.5);
     transform: scale(1.05);
 }
@@ -90,18 +107,7 @@ input[type=number]:focus {
     box-shadow: 0 0 15px rgba(233, 69, 96, 0.4) !important;
 }
 
-.status-waiting {
-    border-color: #4ecca3 !important;
-    color: #4ecca3 !important;
-    box-shadow: 0 0 15px rgba(78, 204, 163, 0.4) !important;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
+/* --- BOUTONS --- */
 .menu-buttons {
     display: flex;
     gap: 10px;
@@ -116,27 +122,11 @@ button {
     font-weight: bold;
     transition: 0.2s ease;
     flex: 1;
-    backface-visibility: hidden;
-    -webkit-font-smoothing: subpixel-antialiased;
     will-change: transform;
 }
 
-.btn-primary {
-    background: #4ecca3;
-    color: #1a1a2e;
-}
-
-.btn-danger {
-    background: #e94560;
-    color: white;
-}
-
-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.3;
-    transform: none !important;
-    filter: grayscale(1);
-}
+.btn-primary { background: #4ecca3; color: #1a1a2e; }
+.btn-danger { background: #e94560; color: white; }
 
 .challenge-btn {
     background: transparent;
@@ -149,4 +139,23 @@ button:disabled {
 button:hover:not(:disabled) {
     transform: scale(1.05);
     filter: brightness(1.2);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+/* --- OVERLAY PLEIN ÉCRAN --- */
+#fake-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    z-index: 9999;
 }
