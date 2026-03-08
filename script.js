@@ -91,6 +91,7 @@ const sonsChaosOriginal = [
 
 let sonsDisponibles = [];
 let chaosActive = false;
+let isChallengeActive = false; // --- NOUVEAU : SÉCURITÉ SCORE ---
 let prochainSonTimeout = null;
 let audioActuel = null;
 let chronoGlobal = null; 
@@ -152,16 +153,13 @@ function update() {
         emoji.x += emoji.vx;
         emoji.y += emoji.vy;
 
-        // Taille de collision dynamique selon le niveau
         let diametre = (scoreActuel >= 40) ? 90 : (scoreActuel >= 25) ? 60 : 40;
 
-        // Rebond Parois (avec correction de position pour éviter de traverser)
         if (emoji.x <= 0) { emoji.vx = Math.abs(emoji.vx); emoji.x = 0; }
         if (emoji.x >= window.innerWidth - diametre) { emoji.vx = -Math.abs(emoji.vx); emoji.x = window.innerWidth - diametre; }
         if (emoji.y <= 0) { emoji.vy = Math.abs(emoji.vy); emoji.y = 0; }
         if (emoji.y >= window.innerHeight - diametre) { emoji.vy = -Math.abs(emoji.vy); emoji.y = window.innerHeight - diametre; }
         
-        // Rebond entre Emojis (Physique anti-freeze)
         for (let j = i + 1; j < allEmojis.length; j++) {
             let other = allEmojis[j];
             let dx = other.x - emoji.x;
@@ -170,7 +168,6 @@ function update() {
             let minDist = diametre;
 
             if (distance < minDist) { 
-                // 1. Éjecter les emojis pour qu'ils ne se chevauchent pas (évite le freeze)
                 let overlap = minDist - distance;
                 let nx = dx / distance;
                 let ny = dy / distance;
@@ -179,7 +176,6 @@ function update() {
                 other.x += nx * (overlap / 2);
                 other.y += ny * (overlap / 2);
 
-                // 2. Échange simple des vitesses (rebond)
                 let tempVx = emoji.vx; let tempVy = emoji.vy;
                 emoji.vx = other.vx; emoji.vy = other.vy;
                 other.vx = tempVx; other.vy = tempVy;
@@ -200,7 +196,7 @@ function startChaos() {
 startChaos();
 verifierDeblocages();
 
-// --- LOGIQUE SONORE (GARDÉE À L'IDENTIQUE) ---
+// --- LOGIQUE SONORE ---
 function melangerSons(liste) {
     let copie = [...liste];
     for (let i = copie.length - 1; i > 0; i--) {
@@ -266,6 +262,7 @@ function demarrerCompteurVisuel(secondes, texte, estSon) {
 startBtn.addEventListener('click', () => {
     if (chaosActive) return;
     chaosActive = true;
+    intervalInput.disabled = true; // --- BLOQUÉ ---
     startBtn.innerText = "🔥 ACTIVÉ !";
     statusContainer.style.display = "flex";
     jouerProchainSon();
@@ -275,6 +272,8 @@ stopBtn.addEventListener('click', () => reinitialiserTout());
 
 function reinitialiserTout() {
     chaosActive = false;
+    isChallengeActive = false; // --- SÉCURITÉ ---
+    intervalInput.disabled = false; // --- DÉBLOQUÉ ---
     if (prochainSonTimeout) clearTimeout(prochainSonTimeout);
     if (chronoGlobal) clearInterval(chronoGlobal);
     if (audioActuel) { audioActuel.pause(); audioActuel.currentTime = 0; }
@@ -285,45 +284,44 @@ function reinitialiserTout() {
 function lancerDefi(duree) {
     if (chaosActive) return;
     chaosActive = true;
+    isChallengeActive = true; // --- SEUL MOMENT OÙ ON PEUT GAGNER ---
     intervalInput.value = 1;
+    intervalInput.disabled = true; // --- BLOQUÉ ---
     startBtn.innerText = "🔥 DÉFI !";
     statusContainer.style.display = "flex";
     jouerProchainSon();
     setTimeout(() => {
-        scoreActuel += (duree === 60 ? 3 : 1);
-        scoreDisplay.value = scoreActuel;
-        localStorage.setItem('chaosScore', scoreActuel);
-        verifierDeblocages();
-        reinitialiserTout();
-        alert("Défi réussi ! 🏆");
+        if(isChallengeActive) { // Vérifie qu'on n'a pas fait STOP entre temps
+            scoreActuel += (duree === 60 ? 3 : 1);
+            scoreDisplay.value = scoreActuel;
+            localStorage.setItem('chaosScore', scoreActuel);
+            verifierDeblocages();
+            reinitialiserTout();
+            alert("Défi réussi ! 🏆");
+        }
     }, duree * 1000);
 }
 
 document.getElementById('challenge-30').addEventListener('click', () => lancerDefi(30));
 document.getElementById('challenge-60').addEventListener('click', () => lancerDefi(60));
-// --- SYSTÈME MODE DISCRET (AJOUTÉ À LA FIN) ---
-// --- SYSTÈME MODE DISCRET (SON 100% CONSERVÉ) ---
+
+// --- SYSTÈME MODE DISCRET ---
 const fakeSelect = document.getElementById('fake-screen-select');
 const fakeOverlay = document.getElementById('fake-overlay');
 
 fakeSelect.addEventListener('change', (e) => {
     const imageUrl = e.target.value;
-    
     if (imageUrl) {
-        // Affiche l'image en plein écran
         fakeOverlay.style.backgroundImage = `url('${imageUrl}')`;
         fakeOverlay.style.display = "block";
-        
-        // LE SON RESTE À 100% ICI (Ligne de volume supprimée)
     } else {
         fakeOverlay.style.display = "none";
     }
 });
 
-// Sortie d'urgence avec la touche ECHAP
 window.addEventListener('keydown', (e) => {
     if (e.key === "Escape") {
         fakeOverlay.style.display = "none";
-        fakeSelect.value = ""; // Remet le menu à zéro
+        fakeSelect.value = ""; 
     }
 });
